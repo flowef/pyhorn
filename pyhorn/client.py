@@ -1,12 +1,12 @@
 # Copyright (c) 2019 FLOW Executive Finders
-
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -18,26 +18,34 @@
 import json
 import logging
 from datetime import datetime
+from typing import AnyStr
 from urllib import parse
 
 import requests
 
-logger = logging.getLogger("pyhorn")
-logger.setLevel(logging.DEBUG)
-log_file_handler = logging.FileHandler("pyhorn.log")
-log_file_handler.setLevel(logging.DEBUG)
-log_file_format = logging.Formatter(
-    "%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-log_file_handler.setFormatter(log_file_format)
+__all__ = ['RESTClient', 'set_logger_level']
 
-logger.addHandler(log_file_handler)
+_logger = logging.getLogger("pyhorn")
+_logger.setLevel(logging.CRITICAL)
+_log_file_handler = logging.FileHandler(
+    f"pyhorn_{datetime.now().timestamp()}.log")
+_log_file_handler.setLevel(logging.DEBUG)
+_log_file_format = logging.Formatter(
+    "%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+_log_file_handler.setFormatter(_log_file_format)
+
+_logger.addHandler(_log_file_handler)
 
 MAX_RECORDS = 200
 
-ImmutableEntities = [
+_immutable_entities = [
     "BusinessSector", "Category", "Country", "ClientCorporation", "Skill",
     "Specialty", "State", "TimeUnit"
 ]
+
+
+def set_logger_level(level: AnyStr):
+    _logger.setLevel(level)
 
 
 class RESTClient():
@@ -49,7 +57,7 @@ class RESTClient():
 
     def safe_request(self, method, url, **kwargs):
         try:
-            logger.debug(
+            _logger.debug(
                 json.dumps({
                     "endpoint": f"{method} {url}",
                     "request": kwargs
@@ -61,7 +69,7 @@ class RESTClient():
                 **(kwargs.get("headers") or {})
             }
             response = requests.request(method, url, **kwargs)
-            logger.debug(response.text)
+            _logger.debug(response.text)
             response.raise_for_status()
             return response
         except requests.HTTPError as e:
@@ -69,7 +77,7 @@ class RESTClient():
                 self.authenticate()
                 self.safe_request(method, url, **kwargs)
             else:
-                logger.error(response.text)
+                _logger.error(response.text)
                 raise
 
     def authenticate(self):
@@ -82,8 +90,8 @@ class RESTClient():
             or None if the token is already expired.
         """
         full_url = self.__compose_url(self.auth.restUrl, "ping")
-
-        response = requests.get(full_url, headers=self.auth.get_headers())
+        headers = {"BhRestToken": self.auth.BhRestToken}
+        response = requests.get(full_url, headers=headers)
         if response.status_code == 401:
             return None
         else:
@@ -150,7 +158,7 @@ class RESTClient():
         return response.json()
 
     def delete_entity(self, entity, entity_id):
-        if entity in ImmutableEntities:
+        if entity in _immutable_entities:
             raise ValueError(
                 "The DELETE operation does not support this entity type.")
 
@@ -197,11 +205,11 @@ class RESTClient():
         return response.json()
 
     def __enter__(self):
-        logger.debug("Starting REST Client...")
+        _logger.debug("Starting REST Client...")
         self.authenticate()
-        logger.debug("Authenticated!")
+        _logger.debug("Authenticated!")
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        logger.debug("Closed REST Client.")
-        logger.info(f"Exiting with: {exc_type}, {exc_val}, {exc_tb}")
+        _logger.debug("Closed REST Client.")
+        _logger.info(f"Exiting with: {exc_type}, {exc_val}, {exc_tb}")
