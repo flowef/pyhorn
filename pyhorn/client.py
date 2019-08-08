@@ -73,9 +73,9 @@ class RESTClient():
                 raise
 
     def authenticate(self):
-        # expiration = self.ping()
-        # if not expiration:
-        self.auth.renew()
+        expiration = self.ping()
+        if not expiration:
+            self.auth.renew()
 
     def ping(self) -> datetime:
         """ Returns a datetime object with the current token's expiration,
