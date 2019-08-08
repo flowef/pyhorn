@@ -1,12 +1,10 @@
 # Copyright (c) 2019 FLOW Executive Finders
-
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -14,19 +12,24 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-
 import json
+from typing import AnyStr
 from urllib import parse
 
 import requests
 
-LOGIN_URL = "https://rest.bullhornstaffing.com/rest-services/login"
-TOKEN_URL = "https://auth.bullhornstaffing.com/oauth/token"
-AUTHCODE_URL = "https://auth.bullhornstaffing.com/oauth/authorize"
+__all__ = ['Credentials']
+
+_scheme = "https"
+_rest_endpoint = "rest.bullhornstaffing.com"
+_auth_endpoint = "auth.bullhornstaffing.com"
+_token_path = "/oauth/token"
+_authorize_path = "/oauth/authorize"
+_login_path = "/rest-services/login"
 
 
 class Credentials:
-    def __init__(self, file_name):
+    def __init__(self, file_name: AnyStr):
         self.file_name = file_name
 
     def __setattr__(self, attr, value):
@@ -36,7 +39,7 @@ class Credentials:
         return self.__dict__[attr]
 
     @classmethod
-    def from_json(cls, json_file: str):
+    def from_json(cls, json_file: AnyStr):
         instance = cls(json_file)
         with open(json_file) as stream:
             for k, v in json.load(stream).items():
@@ -47,34 +50,38 @@ class Credentials:
         with open(self.file_name, 'w') as stream:
             json.dump(self.__dict__, stream, indent=True)
 
-    def get_authorization_code(self):
+    def get_authorization_code(self) -> AnyStr:
         params = {"client_id": self.client_id, "response_type": "code"}
         login_data = {
             "username": self.username,
             "password": self.password,
             "action": "Login"
         }
-        endpoint = f"{AUTHCODE_URL}?{parse.urlencode(params)}"
+        endpoint = parse.urlunparse(
+            (_scheme, _auth_endpoint, _authorize_path, '',
+             parse.urlencode(params), ''))
         response = requests.post(endpoint, login_data)
 
         query_string = parse.parse_qs(parse.urlparse(response.url).query)
 
         return query_string["code"][0]
 
-    def get_access_token(self):
+    def issue_token(self):
         request_params = {
             "grant_type": "authorization_code",
             "code": self.get_authorization_code(),
             "client_id": self.client_id,
             "client_secret": self.client_secret
         }
-        endpoint = f"{TOKEN_URL}?{parse.urlencode(request_params)}"
-        new_auth = requests.post(endpoint)
-        new_auth.raise_for_status()
-        new_auth = new_auth.json()
+        endpoint = parse.urlunparse((_scheme, _auth_endpoint, _token_path, '',
+                                     parse.urlencode(request_params), ''))
+        response = requests.post(endpoint)
+        response.raise_for_status()
+        credentials = response.json()
 
-        (self.access_token, self.refresh_token) = (new_auth["access_token"],
-                                                   new_auth["refresh_token"])
+        (self.access_token,
+         self.refresh_token) = (credentials["access_token"],
+                                credentials["refresh_token"])
 
     def renew_token(self):
         renewal_params = {
@@ -83,22 +90,26 @@ class Credentials:
             "client_id": self.client_id,
             "client_secret": self.client_secret
         }
-        endpoint = f"{TOKEN_URL}?{parse.urlencode(renewal_params)}"
-        new_auth = requests.post(endpoint)
-        new_auth.raise_for_status()
-        new_auth = new_auth.json()
+        endpoint = parse.urlunparse((_scheme, _auth_endpoint, _token_path, '',
+                                     parse.urlencode(renewal_params), ''))
+        response = requests.post(endpoint)
+        response.raise_for_status()
+        credentials = response.json()
 
-        (self.access_token, self.refresh_token) = (new_auth["access_token"],
-                                                   new_auth["refresh_token"])
+        (self.access_token,
+         self.refresh_token) = (credentials["access_token"],
+                                credentials["refresh_token"])
 
     def login(self) -> dict:
         query = {"access_token": self.access_token, "version": "*"}
-        login = requests.post(f"{LOGIN_URL}?{parse.urlencode(query)}")
-        login.raise_for_status()
-        params = login.json()
+        endpoint = parse.urlunparse((_scheme, _rest_endpoint, _login_path, '',
+                                     parse.urlencode(query), ''))
+        response = requests.post(endpoint)
+        response.raise_for_status()
+        login_data = response.json()
 
-        (self.restUrl, self.BhRestToken) = (params["restUrl"],
-                                            params["BhRestToken"])
+        (self.restUrl, self.BhRestToken) = (login_data["restUrl"],
+                                            login_data["BhRestToken"])
 
     def renew(self):
         try:
@@ -106,9 +117,6 @@ class Credentials:
         except requests.HTTPError as err:
             if err.response.status_code not in [400, 401]:
                 raise
-            self.get_access_token()
+            self.issue_token()
         self.login()
         self.save()
-
-    def get_headers(self):
-        return {"BhRestToken": self.BhRestToken}

@@ -55,7 +55,9 @@ class RESTClient():
                     "request": kwargs
                 }))
             kwargs["headers"] = {
-                **self.auth.get_headers(),
+                **{
+                    "BhRestToken": self.auth.BhRestToken
+                },
                 **(kwargs.get("headers") or {})
             }
             response = requests.request(method, url, **kwargs)
@@ -71,9 +73,9 @@ class RESTClient():
                 raise
 
     def authenticate(self):
-        expiration = self.ping()
-        if not expiration:
-            self.auth.renew()
+        # expiration = self.ping()
+        # if not expiration:
+        self.auth.renew()
 
     def ping(self) -> datetime:
         """ Returns a datetime object with the current token's expiration,
