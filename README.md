@@ -1,6 +1,26 @@
 # PyHorn
 
-A Python client to interact with Bullhorn's REST API.
+An unofficial Python client to interact with Bullhorn's REST API.
+We developed this client to facilitate the integration of FLOW's systems with Bullhorn, and decided to disclose the source for any other developers that may find it useful.
+
+Authentication requires a simple JSON file containing the following auth-related data (provided by Bullhorn themselves):
+
+- username
+- password
+- client_id
+- client_secret
+
+Other fields are filled automatically and stored in `file_name` for better use of the authenticated session.
+
+```json
+{
+ "file_name": "auth.json",
+ "client_id": "GUIDprovidedbybullhorn",
+ "client_secret": "secretprovidedbybullhorn",
+ "username": "apiuser",
+ "password": "yourpasswordshouldgohere"
+}
+```
 
 ## Supported Functions
 

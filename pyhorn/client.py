@@ -23,6 +23,8 @@ from urllib import parse
 
 import requests
 
+import pyhorn.auth
+
 __all__ = ['RESTClient', 'set_logger_level']
 
 _logger = logging.getLogger("pyhorn")
@@ -49,7 +51,7 @@ def set_logger_level(level: AnyStr):
 
 
 class RESTClient():
-    def __init__(self, auth):
+    def __init__(self, auth: pyhorn.auth.Credentials):
         self.auth = auth
 
     def __compose_url(self, *args):
@@ -89,15 +91,22 @@ class RESTClient():
         """ Returns a datetime object with the current token's expiration,
             or None if the token is already expired.
         """
-        full_url = self.__compose_url(self.auth.restUrl, "ping")
-        headers = {"BhRestToken": self.auth.BhRestToken}
-        response = requests.get(full_url, headers=headers)
-        if response.status_code == 401:
-            return None
-        else:
-            response.raise_for_status()
-        data = response.json()
-        return datetime.fromtimestamp(float(data["sessionExpires"]) / 1000.0)
+        try:
+            full_url = self.__compose_url(self.auth.restUrl, "ping")
+            headers = {"BhRestToken": self.auth.BhRestToken}
+            response = requests.get(full_url, headers=headers)
+            if response.status_code == 401:
+                return None
+            else:
+                response.raise_for_status()
+            data = response.json()
+            return datetime.fromtimestamp(
+                float(data["sessionExpires"]) / 1000.0)
+        except KeyError as e:
+            if e.args[0] == "restUrl":
+                return None
+            else:
+                raise
 
     def get_entity(self, entity, entity_ids, **kwargs):
         params = {a: v for a, v in kwargs.items()}

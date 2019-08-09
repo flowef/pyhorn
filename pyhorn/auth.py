@@ -114,11 +114,14 @@ class Credentials:
                                             login_data["BhRestToken"])
 
     def renew(self):
-        try:
-            self.renew_token()
-        except requests.HTTPError as err:
-            if err.response.status_code not in [400, 401]:
-                raise
+        if "refresh_token" in self.__dict__:
+            try:
+                self.renew_token()
+            except requests.HTTPError as err:
+                if err.response.status_code not in [400, 401]:
+                    raise
+                self.issue_token()
+        else:
             self.issue_token()
         self.login()
         self.save()
