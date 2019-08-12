@@ -216,14 +216,37 @@ class RESTClient():
 
         return response.json()
 
-    def capture(self, subscriptionId, max_events=100, **kwargs):
+    def capture(self, sub_id, max_events=100, **kwargs):
         params = {"maxEvents": max_events, **{k: v for k, v in kwargs.items()}}
 
         base_url = self.__compose_url(self.auth.restUrl, "event",
-                                      "subscription", subscriptionId)
+                                      "subscription", sub_id)
         full_url = f"{base_url}?{parse.urlencode(params)}"
         response = self.safe_request("GET", full_url)
+        if int(response.headers["Content-Length"]) > 0:
+            return response.json()
+        else:
+            return None
 
+    def recapture(self, sub_id: AnyStr, request_id: int):
+        base_url = self.__compose_url(self.auth.restUrl, "event",
+                                      "subscription", sub_id, str(request_id))
+        response = self.safe_request("GET", base_url)
+
+        return response.json()
+
+    def subscribe(self, sub_id: AnyStr, sub_type: AnyStr, entities: list,
+                  event_types: list):
+        params = {
+            "type": sub_type,
+            "names": ",".join(entities),
+            "eventTypes": ",".join(event_types)
+        }
+
+        base_url = self.__compose_url(self.auth.restUrl, "event",
+                                      "subscription", sub_id)
+        full_url = f"{base_url}?{parse.urlencode(params)}"
+        response = self.safe_request("PUT", full_url)
         return response.json()
 
     def __enter__(self):

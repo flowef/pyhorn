@@ -107,13 +107,5 @@ def test_ping():
 
 
 with client.RESTClient(credentials) as bullhorn:
-    job_order = bullhorn.get_entity("JobOrder", [29],
-                                    fields="customText10,categories(name)")
-    categories = bullhorn.query("Category",
-                                "name = 'COO (-vendas)'",
-                                fields="id,name")
-    category_ids = [x["id"] for x in categories["data"]]
-    print(category_ids)
-    pprint(get_latest_five_companies())
-    print(job_order)
-    pprint(categories)
+    job_order = bullhorn.capture("test-sub")
+    pprint(job_order)
