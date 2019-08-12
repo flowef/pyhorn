@@ -216,6 +216,16 @@ class RESTClient():
 
         return response.json()
 
+    def capture(self, subscriptionId, max_events=100, **kwargs):
+        params = {"maxEvents": max_events, **{k: v for k, v in kwargs.items()}}
+
+        base_url = self.__compose_url(self.auth.restUrl, "event",
+                                      "subscription", subscriptionId)
+        full_url = f"{base_url}?{parse.urlencode(params)}"
+        response = self.safe_request("GET", full_url)
+
+        return response.json()
+
     def __enter__(self):
         _logger.debug("Starting REST Client...")
         self.authenticate()
