@@ -79,7 +79,7 @@ class RESTClient():
             return response
         except requests.HTTPError as e:
             if e.response.status_code == 401:
-                self.authenticate()
+                self.auth.renew()
                 self.safe_request(method, url, **kwargs)
             else:
                 _logger.error(response.text)
@@ -229,11 +229,13 @@ class RESTClient():
             return None
 
     def recapture(self, sub_id: AnyStr, request_id: int):
-        base_url = self.__compose_url(self.auth.restUrl, "event",
-                                      "subscription", sub_id, str(request_id))
-        response = self.safe_request("GET", base_url)
+        return self.capture(sub_id, requestId=request_id)
 
-        return response.json()
+    def get_last_capture_id(self, sub_id: AnyStr) -> int:
+        base_url = self.__compose_url(self.auth.restUrl, "event",
+                                      "subscription", sub_id, "lastRequestId")
+        response = self.safe_request("GET", base_url)
+        return response.json()['result']
 
     def subscribe(self, sub_id: AnyStr, sub_type: AnyStr, entities: list,
                   event_types: list):

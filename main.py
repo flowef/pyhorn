@@ -107,5 +107,6 @@ def test_ping():
 
 
 with client.RESTClient(credentials) as bullhorn:
-    job_order = bullhorn.capture("test-sub")
+    last_id = bullhorn.get_last_capture_id("test-sub")
+    job_order = bullhorn.recapture("test-sub", last_id)
     pprint(job_order)
