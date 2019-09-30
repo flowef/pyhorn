@@ -79,7 +79,7 @@ class RESTClient():
             return response
         except requests.HTTPError as e:
             if e.response.status_code == 401:
-                self.authenticate()
+                self.auth.renew()
                 self.safe_request(method, url, **kwargs)
             else:
                 _logger.error(response.text)
@@ -214,6 +214,41 @@ class RESTClient():
             full_url = f"{base_url}?{parse.urlencode(params)}"
             response = self.safe_request("GET", full_url)
 
+        return response.json()
+
+    def capture(self, sub_id, max_events=100, **kwargs):
+        params = {"maxEvents": max_events, **{k: v for k, v in kwargs.items()}}
+
+        base_url = self.__compose_url(self.auth.restUrl, "event",
+                                      "subscription", sub_id)
+        full_url = f"{base_url}?{parse.urlencode(params)}"
+        response = self.safe_request("GET", full_url)
+        if int(response.headers["Content-Length"]) > 0:
+            return response.json()
+        else:
+            return None
+
+    def recapture(self, sub_id: AnyStr, request_id: int):
+        return self.capture(sub_id, requestId=request_id)
+
+    def get_last_capture_id(self, sub_id: AnyStr) -> int:
+        base_url = self.__compose_url(self.auth.restUrl, "event",
+                                      "subscription", sub_id, "lastRequestId")
+        response = self.safe_request("GET", base_url)
+        return response.json()['result']
+
+    def subscribe(self, sub_id: AnyStr, sub_type: AnyStr, entities: list,
+                  event_types: list):
+        params = {
+            "type": sub_type,
+            "names": ",".join(entities),
+            "eventTypes": ",".join(event_types)
+        }
+
+        base_url = self.__compose_url(self.auth.restUrl, "event",
+                                      "subscription", sub_id)
+        full_url = f"{base_url}?{parse.urlencode(params)}"
+        response = self.safe_request("PUT", full_url)
         return response.json()
 
     def __enter__(self):

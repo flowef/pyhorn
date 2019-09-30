@@ -3,6 +3,12 @@
 An unofficial Python client to interact with Bullhorn's REST API.
 We developed this client to facilitate the integration of FLOW's systems with Bullhorn, and decided to disclose the source for any other developers that may find it useful.
 
+## Installation
+
+`pip install pyhorn-flow`
+
+## Authentication
+
 Authentication requires a simple JSON file containing the following auth-related data (provided by Bullhorn themselves):
 
 - username
