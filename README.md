@@ -43,7 +43,11 @@ Other fields are filled automatically and stored in `file_name` for better use o
 
 ## Changelog
 
-### v1.0
+### v1.1.0
+
+- Added functions to subscribe to Bullhorn events and read them
+
+### v1.0.0
 
 - Added safe request to re-authorize requests when 401 is returned from API
 - Added Entity creation, update and deletion
