@@ -40,6 +40,11 @@ Other fields are filled automatically and stored in `file_name` for better use o
 - To-many
   - Create association
   - Delete association
+- Event
+  - Subscription
+  - Request
+  - Retry
+  - Get last request ID
 
 ## Changelog
 
