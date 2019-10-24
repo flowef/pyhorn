@@ -55,7 +55,7 @@ def set_logger_level(level: AnyStr):
 
 class RESTClient():
     def __init__(self, auth: pyhorn.auth.Credentials):
-        self.auth = auth
+        self.auth = auth        
 
     def __compose_url(self, *args):
         return "/".join(args)
@@ -195,7 +195,7 @@ class RESTClient():
     def query(self, entity, where, *args, **kwargs):
         params = {"where": where, **{a: v for a, v in kwargs.items()}}
         base_url = self.__compose_url(self.auth.restUrl, "query", entity)
-
+        
         if len(where) >= 7500:
             response = self.safe_request("POST", base_url, json=params)
         else:
@@ -249,6 +249,24 @@ class RESTClient():
                                       "subscription", sub_id)
         full_url = f"{base_url}?{parse.urlencode(params)}"
         response = self.safe_request("PUT", full_url)
+        return response.json()
+    
+    def entity_file_attachment(self, entity, entity_ids, *args, **kwargs):
+        params = {a: v for a, v in kwargs.items()}        
+
+        if type(entity_ids) is int:
+            entity_ids = str(entity_ids)
+        elif type(entity_ids) is list and type(entity_ids[0]) is int:
+            entity_ids = ','.join([str(i) for i in entity_ids])
+        else:
+            raise TypeError("entityIds should be of type int or list(int)")
+
+        base_url = self.__compose_url(self.auth.restUrl, "entity", entity,
+                                      entity_ids)
+        full_url = f"{base_url}?{parse.urlencode(params)}"
+        
+        response = self.safe_request("GET", full_url)
+        
         return response.json()
 
     def __enter__(self):

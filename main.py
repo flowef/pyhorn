@@ -22,6 +22,7 @@ from datetime import datetime
 from pprint import pprint
 
 from pyhorn import auth, client
+import pyhorn
 
 credentials = auth.Credentials.from_json("auth.json")
 client.set_logger_level("DEBUG")
@@ -101,12 +102,12 @@ def get_company_contacts(company_ids):
         return data
 
 
-def test_ping():
-    with client.RESTClient(credentials) as bullhorn:
-        print(bullhorn.ping())
-
-
 with client.RESTClient(credentials) as bullhorn:
     last_id = bullhorn.get_last_capture_id("test-sub")
-    job_order = bullhorn.recapture("test-sub", last_id)
-    pprint(job_order)
+    job_order = bullhorn.recapture("test-sub", last_id)    
+
+with client.RESTClient(credentials) as bullhorn:    
+    fields = "*"
+    entity = "JobOrder"
+    entity_id = 1213
+    print(bullhorn.entity_file_attachment(entity, entity_id, fields=fields))
