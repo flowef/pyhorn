@@ -262,10 +262,30 @@ class RESTClient():
             raise TypeError("entityIds should be of type int or list(int)")
 
         base_url = self.__compose_url(self.auth.restUrl, "entity", entity,
-                                      entity_ids)
+                                      entity_ids, "fileAttachments")
         full_url = f"{base_url}?{parse.urlencode(params)}"
         
         response = self.safe_request("GET", full_url)
+        
+        return response.json()
+
+    def entity_edit_history(self, entity, where, *args, **kwargs):
+        params = {"where": where, **{a: v for a, v in kwargs.items()}}       
+        
+        base_url = self.__compose_url(self.auth.restUrl, "query", f'{entity}EditHistory',)
+        full_url = f"{base_url}?{parse.urlencode(params)}"
+        
+        response = self.safe_request("GET", full_url)                
+        
+        return response.json()
+    
+    def entity_edit_history_field_change(self, entity, where, *args, **kwargs):
+        params = {"where": where, **{a: v for a, v in kwargs.items()}}       
+        
+        base_url = self.__compose_url(self.auth.restUrl, "query", f'{entity}EditHistoryFieldChange',)
+        full_url = f"{base_url}?{parse.urlencode(params)}"
+        
+        response = self.safe_request("GET", full_url)                
         
         return response.json()
 
