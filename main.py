@@ -109,5 +109,14 @@ with client.RESTClient(credentials) as bullhorn:
 with client.RESTClient(credentials) as bullhorn:    
     fields = "*"
     entity = "JobOrder"
-    entity_id = 1213
-    print(bullhorn.entity_file_attachment(entity, entity_id, fields=fields))
+    entity_id = 642
+    where = "id>0"
+
+    response = bullhorn.entity_file_attachment(entity, entity_id, fields=fields)    
+    
+    where = "id>0"
+    response = bullhorn.entity_edit_history(entity, where, fields=fields)
+    
+    where = "id>0"
+    response = bullhorn.entity_edit_history_field_change(entity, where, fields=fields)
+    print(response)
