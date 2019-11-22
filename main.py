@@ -103,20 +103,43 @@ def get_company_contacts(company_ids):
 
 
 with client.RESTClient(credentials) as bullhorn:
-    last_id = bullhorn.get_last_capture_id("test-sub")
-    job_order = bullhorn.recapture("test-sub", last_id)    
+    # last_id = bullhorn.get_last_capture_id("test-sub")
+    # job_order = bullhorn.recapture("test-sub", last_id)  
+    # response = bullhorn.capture("cdc-BullhornExtractor")     
+    # print(response)    
+    # fields="id,address,businessSectorList,companyDescription,companyURL,customText2,customText3,customTextBlock1,dateAdded,dateLastModified,externalID,industryList,name,notes,ownership,phone,status,parentClientCorporation(id)"
+    # response = bullhorn.get_entity("ClientCorporation", 13333, fields=fields)   
 
-with client.RESTClient(credentials) as bullhorn:    
-    fields = "*"
-    entity = "JobOrder"
-    entity_id = 642
-    where = "id>0"
+    start = 0
+    fields="id"
+    tasks = list()
+    
+    response = bullhorn.query("JobSubmissionHistory", where="id>0", fields=fields, start=start, count=500)
 
-    response = bullhorn.entity_file_attachment(entity, entity_id, fields=fields)    
+    while True:
+        start = start + response['count']        
+        if start > 100:
+            break
+        task = bullhorn.query("JobSubmissionHistory", where="id>0", fields=fields, start=start, count=500)
+        tasks.append(task)
+
+    # print(response['total'])
+    # div = int(response['total'] / response['count'])
+    # for req in range(div):
+    #     start = start + response['count']
+    #     bullhorn.search("ClientContact", query="id: [0 TO *]", fields=fields, count=500, start=start)
     
-    where = "id>0"
-    response = bullhorn.entity_edit_history(entity, where, fields=fields)
+
+# with client.RESTClient(credentials) as bullhorn:    
+#     fields = "*"
+#     entity = "JobOrder"
+#     entity_id = 642
+#     where = "id>0"
+
+#     response = bullhorn.entity_file_attachment(entity, entity_id, fields=fields)    
     
-    where = "id>0"
-    response = bullhorn.entity_edit_history_field_change(entity, where, fields=fields)
-    print(response)
+#     where = "id>0"
+#     response = bullhorn.entity_edit_history(entity, where, fields=fields)
+    
+#     where = "id>0"
+#     response = bullhorn.entity_edit_history_field_change(entity, where, fields=fields)    
