@@ -82,6 +82,7 @@ class RESTClient():
                 self.auth.renew()
                 self.safe_request(method, url, **kwargs)
             else:
+                print(response.text)
                 _logger.error(response.text)
                 raise
 
@@ -237,20 +238,22 @@ class RESTClient():
         response = self.safe_request("GET", base_url)
         return response.json()['result']
 
-    def subscribe(self, sub_id: AnyStr, sub_type: AnyStr, entities: list,
-                  event_types: list):
-        params = {
-            "type": sub_type,
-            "names": ",".join(entities),
-            "eventTypes": ",".join(event_types)
-        }
+    def subscribe(self, sub_id):        
+
+        full_url = self.__compose_url(self.auth.restUrl, "event",
+                                      "subscription", sub_id)
+
+        response = self.safe_request("DELETE", full_url)
+        return response.json()
+        
+    def delete_subscribe(self, sub_id: AnyStr):        
 
         base_url = self.__compose_url(self.auth.restUrl, "event",
                                       "subscription", sub_id)
-        full_url = f"{base_url}?{parse.urlencode(params)}"
-        response = self.safe_request("PUT", full_url)
+        
+        response = self.safe_request("DELETE", base_url)
         return response.json()
-    
+
     def entity_file_attachment(self, entity, entity_ids, *args, **kwargs):
         params = {a: v for a, v in kwargs.items()}        
 
