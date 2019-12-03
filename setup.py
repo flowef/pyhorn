@@ -7,7 +7,7 @@ short_description = "An unofficial Bullhorn REST API client written in Python."
 
 setuptools.setup(
     name="pyhorn-flow",
-    version="1.3.0",
+    version="1.3.1",
     author="Stephan Chang",
     author_email="stephan.chang@flowef.com",
     description=short_description,

@@ -55,7 +55,7 @@ def set_logger_level(level: AnyStr):
 
 class RESTClient():
     def __init__(self, auth: pyhorn.auth.Credentials):
-        self.auth = auth        
+        self.auth = auth
 
     def __compose_url(self, *args):
         return "/".join(args)
@@ -80,7 +80,7 @@ class RESTClient():
         except requests.HTTPError as e:
             if e.response.status_code == 401:
                 self.auth.renew()
-                self.safe_request(method, url, **kwargs)
+                return self.safe_request(method, url, **kwargs)
             else:
                 print(response.text)
                 _logger.error(response.text)
@@ -196,7 +196,7 @@ class RESTClient():
     def query(self, entity, where, *args, **kwargs):
         params = {"where": where, **{a: v for a, v in kwargs.items()}}
         base_url = self.__compose_url(self.auth.restUrl, "query", entity)
-        
+
         if len(where) >= 7500:
             response = self.safe_request("POST", base_url, json=params)
         else:
@@ -238,24 +238,24 @@ class RESTClient():
         response = self.safe_request("GET", base_url)
         return response.json()['result']
 
-    def subscribe(self, sub_id):        
+    def subscribe(self, sub_id):
 
         full_url = self.__compose_url(self.auth.restUrl, "event",
                                       "subscription", sub_id)
 
         response = self.safe_request("DELETE", full_url)
         return response.json()
-        
-    def delete_subscribe(self, sub_id: AnyStr):        
+
+    def delete_subscribe(self, sub_id: AnyStr):
 
         base_url = self.__compose_url(self.auth.restUrl, "event",
                                       "subscription", sub_id)
-        
+
         response = self.safe_request("DELETE", base_url)
         return response.json()
 
     def entity_file_attachment(self, entity, entity_ids, *args, **kwargs):
-        params = {a: v for a, v in kwargs.items()}        
+        params = {a: v for a, v in kwargs.items()}
 
         if type(entity_ids) is int:
             entity_ids = str(entity_ids)
@@ -267,29 +267,37 @@ class RESTClient():
         base_url = self.__compose_url(self.auth.restUrl, "entity", entity,
                                       entity_ids, "fileAttachments")
         full_url = f"{base_url}?{parse.urlencode(params)}"
-        
+
         response = self.safe_request("GET", full_url)
-        
+
         return response.json()
 
     def entity_edit_history(self, entity, where, *args, **kwargs):
-        params = {"where": where, **{a: v for a, v in kwargs.items()}}       
-        
-        base_url = self.__compose_url(self.auth.restUrl, "query", f'{entity}EditHistory',)
+        params = {"where": where, **{a: v for a, v in kwargs.items()}}
+
+        base_url = self.__compose_url(
+            self.auth.restUrl,
+            "query",
+            f'{entity}EditHistory',
+        )
         full_url = f"{base_url}?{parse.urlencode(params)}"
-        
-        response = self.safe_request("GET", full_url)                
-        
+
+        response = self.safe_request("GET", full_url)
+
         return response.json()
-    
+
     def entity_edit_history_field_change(self, entity, where, *args, **kwargs):
-        params = {"where": where, **{a: v for a, v in kwargs.items()}}       
-        
-        base_url = self.__compose_url(self.auth.restUrl, "query", f'{entity}EditHistoryFieldChange',)
+        params = {"where": where, **{a: v for a, v in kwargs.items()}}
+
+        base_url = self.__compose_url(
+            self.auth.restUrl,
+            "query",
+            f'{entity}EditHistoryFieldChange',
+        )
         full_url = f"{base_url}?{parse.urlencode(params)}"
-        
-        response = self.safe_request("GET", full_url)                
-        
+
+        response = self.safe_request("GET", full_url)
+
         return response.json()
 
     def __enter__(self):
